@@ -1,15 +1,15 @@
 
+import torch
+from torch_geometric.transforms import Compose, FixedPoints, NormalizeScale
+from torch_geometric.datasets import ShapeNet
+from torch_geometric.loader import DataLoader
+
+from models.diffusion import Model
 from common.visualization import visualize_batch_results
 from common.logs import get_logger, get_new_log_dir
 from loss.chamfer import CDLoss
-import torch
-from torch_geometric.transforms import Compose, FixedPoints
-from torch_geometric.datasets import ShapeNet
-from torch_geometric.loader import DataLoader
-import logging
-import os
-import time
 
+import os
 
 
 def get_data_iterator(iterable):
@@ -31,11 +31,11 @@ category = 'Airplane'
 
 transform = Compose([
     FixedPoints(1024),
-    # T.RandomRotate(15, axis=0),
-    # T.RandomRotate(15, axis=1),
-    # T.RandomRotate(15, axis=2),
+    # RandomRotate(15, axis=0),
+    # RandomRotate(15, axis=1),
+    # RandomRotate(15, axis=2),
 ])
-pre_transform = T.NormalizeScale()
+pre_transform = NormalizeScale()
 train_dataset = ShapeNet(path, category, split='trainval', transform=transform, pre_transform=pre_transform)
 test_dataset = ShapeNet(path, category, split='test', transform=transform, pre_transform=pre_transform)
 train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True)
