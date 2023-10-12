@@ -1,2 +1,0 @@
-[2023-10-12 03:36:08,320::val::INFO] Validation:: Iteration: 0, Loss: 1.7657582759857178
-[2023-10-12 03:36:12,477::val::INFO] Validation:: Saved sample image to ./logs/diffusion_2023_10_12__03_33_41/samples/sample_1000.png
