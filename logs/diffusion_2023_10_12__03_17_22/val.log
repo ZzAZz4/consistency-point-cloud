@@ -1,0 +1,17 @@
+[2023-10-12 03:19:39,456::val::INFO] Validation:: Iteration: 0, Loss: 3.631141185760498
+[2023-10-12 03:19:42,661::val::INFO] Validation:: Saved sample image to ./logs/diffusion_2023_10_12__03_17_22/samples/sample_1000.png
+[2023-10-12 03:19:56,305::val::INFO] Validation:: Iteration: 1, Loss: 3.654146909713745
+[2023-10-12 03:20:09,948::val::INFO] Validation:: Iteration: 2, Loss: 3.590223550796509
+[2023-10-12 03:20:23,589::val::INFO] Validation:: Iteration: 3, Loss: 3.634727716445923
+[2023-10-12 03:20:37,234::val::INFO] Validation:: Iteration: 4, Loss: 3.758711338043213
+[2023-10-12 03:20:50,878::val::INFO] Validation:: Iteration: 5, Loss: 3.6535847187042236
+[2023-10-12 03:21:04,525::val::INFO] Validation:: Iteration: 6, Loss: 3.716777801513672
+[2023-10-12 03:21:18,169::val::INFO] Validation:: Iteration: 7, Loss: 3.679116725921631
+[2023-10-12 03:21:31,817::val::INFO] Validation:: Iteration: 8, Loss: 3.5186102390289307
+[2023-10-12 03:21:45,466::val::INFO] Validation:: Iteration: 9, Loss: 3.7694122791290283
+[2023-10-12 03:21:59,116::val::INFO] Validation:: Iteration: 10, Loss: 3.6139934062957764
+[2023-10-12 03:22:12,759::val::INFO] Validation:: Iteration: 11, Loss: 3.5893495082855225
+[2023-10-12 03:22:26,402::val::INFO] Validation:: Iteration: 12, Loss: 3.6285839080810547
+[2023-10-12 03:22:40,046::val::INFO] Validation:: Iteration: 13, Loss: 3.713101625442505
+[2023-10-12 03:22:43,158::val::INFO] Validation:: Iteration: 14, Loss: 0.8052597641944885
+[2023-10-12 03:22:43,158::val::INFO] Validation:: Average Loss: 0.15236580843799624
