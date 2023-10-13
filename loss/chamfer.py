@@ -3,6 +3,14 @@ from pytorch3d.loss import chamfer_distance
 from torch_geometric.utils import to_dense_batch
 
 
+class MSELoss(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+        self._loss = torch.nn.MSELoss() 
+
+    def forward(self, pred, target, batch, reduction='mean'):
+        return self._loss(pred, target)
+
 class CDLoss(torch.nn.Module):
     def __init__(self):
         super().__init__()

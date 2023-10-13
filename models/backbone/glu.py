@@ -23,9 +23,9 @@ class PointwiseNet(torch.nn.Module):
         super().__init__()
         self.embedding = PositionalEncoding(dim_ctx)
         self.net = ModuleList([
-            ConcatSquashLinear(3, 128, dim_ctx + dim_ctx),
-            ConcatSquashLinear(128, 256, dim_ctx + dim_ctx),
+            ConcatSquashLinear(3, 256, dim_ctx + dim_ctx),
             ConcatSquashLinear(256, 512, dim_ctx + dim_ctx),
+            ConcatSquashLinear(512, 512, dim_ctx + dim_ctx),
             ConcatSquashLinear(512, 256, dim_ctx + dim_ctx),
             ConcatSquashLinear(256, 128, dim_ctx + dim_ctx),
         ])
