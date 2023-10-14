@@ -9,6 +9,7 @@ from models.diffusion import Model
 from common.visualization import visualize_batch_results
 from common.logs import get_logger, get_new_log_dir
 from loss.chamfer import CDLoss, MSELoss
+from argparse import ArgumentParser
 
 
 import os
@@ -20,10 +21,21 @@ def get_data_iterator(iterable):
         for element in iterable:
             yield element
 
+parser = ArgumentParser()
+parser.add_argument('--logdir', type=str, default='logs')
+parser.add_argument('--batch_size', type=int, default=32)
+parser.add_argument('--num_steps', type=int, default=1000)
+parser.add_argument('--beta_1', type=float, default=1e-4)
+parser.add_argument('--beta_T', type=float, default=0.02)
+parser.add_argument('--zdim', type=int, default=256)
+parser.add_argument('--lr', type=float, default=0.01)
+parser.add_argument('--checkpoint', type=str, default=None)
+parser.add_argument('--validate-every', type=int, default=1000)
+
+args = parser.parse_args()
+
 
 writer = SummaryWriter()
-
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 path = "data/ShapeNet"
 category = 'Airplane'
 
@@ -38,16 +50,15 @@ train_dataset = ShapeNet(path, category, split='trainval',
                          transform=transform, pre_transform=pre_transform)
 test_dataset = ShapeNet(path, category, split='test',
                         transform=transform, pre_transform=pre_transform)
-train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True)
-test_loader = DataLoader(test_dataset, batch_size=32, shuffle=False)
+train_loader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True)
+test_loader = DataLoader(test_dataset, batch_size=args.batch_size, shuffle=False)
 
-
-model = Model(zdim=256, num_steps=1000,
-              beta_1=1e-4, beta_T=0.02).to('cuda')
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+model = Model(zdim=args.zdim, num_steps=args.num_steps, beta_1=args.beta_1, beta_T=args.beta_T).to(device)
 optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
 
 # checkpoint = torch.load('checkpoints/2023_10_13__03_44_10/ckpt_66000.pt')
-checkpoint = None
+checkpoint = args.checkpoint
 if checkpoint is not None:
     model.load_state_dict(checkpoint['model_state_dict'])
     optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
@@ -60,7 +71,7 @@ os.makedirs('checkpoints', exist_ok=True)
 checkpoint_dir = 'checkpoints/{}'.format(time_str)
 os.makedirs(checkpoint_dir, exist_ok=True)
 
-logdir = get_new_log_dir(prefix='diffusion_')
+logdir = get_new_log_dir(root=args.logdir, prefix='diffusion_')
 logger = get_logger('train', log_dir=logdir)
 
 
@@ -95,6 +106,7 @@ def create_sample_figure(dataset, num_samples):
     return fig
 
 def train():
+    validation_interval = args.validate_every
     for i, data in enumerate(get_data_iterator(train_loader), 1):
         optimizer.zero_grad()  # Clear gradients.
         model.train()
@@ -109,7 +121,7 @@ def train():
         logger.info(f'Iteration: {i}, Loss: {loss.item()}')
         writer.add_scalar('Train Loss', loss.item(), i)
 
-        if i % 1000 == 0:
+        if i % validation_interval == 0:
             logger.info("Creating sample image and validation loss")
 
             train_fig = create_sample_figure(train_dataset, 10)
