@@ -30,7 +30,7 @@ parser.add_argument('--beta_T', type=float, default=0.02)
 parser.add_argument('--zdim', type=int, default=256)
 parser.add_argument('--lr', type=float, default=0.01)
 parser.add_argument('--checkpoint', type=str, default=None)
-parser.add_argument('--validate-every', type=int, default=1000)
+parser.add_argument('--validate_every', type=int, default=1000)
 
 args = parser.parse_args()
 
@@ -55,7 +55,7 @@ test_loader = DataLoader(test_dataset, batch_size=args.batch_size, shuffle=False
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 model = Model(zdim=args.zdim, num_steps=args.num_steps, beta_1=args.beta_1, beta_T=args.beta_T).to(device)
-optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
+optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
 
 # checkpoint = torch.load('checkpoints/2023_10_13__03_44_10/ckpt_66000.pt')
 checkpoint = args.checkpoint
