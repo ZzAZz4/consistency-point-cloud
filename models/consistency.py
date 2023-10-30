@@ -92,7 +92,7 @@ class PointConsistencyTraining(nn.Module):
         next_x = model(next_x, next_sigmas)
 
         with torch.no_grad():
-            current_x = x + (x * current_sigmas)
+            current_x = x + (noise * current_sigmas)
             current_x = ema_model(current_x, current_sigmas)
 
         return next_x, current_x

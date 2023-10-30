@@ -32,7 +32,10 @@ class PointNetEncoder(torch.nn.Module):
         index = fps(pos, batch, ratio=0.5)
         h, pos, batch = h[index], pos[index], batch[index]
         edge_index = knn_graph(pos, k=16, batch=batch, loop=True)
-        h = self.conv2(x=h, pos=pos, edge_index=edge_index)
+        h = self.conv2(x=(h, h), pos=pos, edge_index=edge_index)
 
         h = self.aggr(h, batch) 
         return self.net(h)
+    
+    def __call__(self, pos: torch.Tensor, batch: torch.Tensor):
+        return super().__call__(pos, batch)

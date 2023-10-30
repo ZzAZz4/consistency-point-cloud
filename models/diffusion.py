@@ -3,7 +3,7 @@ import torch
 import numpy as np
 
 from models.backbone.pointnet import PointNetEncoder
-from models.backbone.glu import PointwiseNet
+from models.backbone.glu import GLUDecoder
 
 
 class VarianceSchedule(torch.nn.Module):
@@ -54,7 +54,7 @@ class Model(torch.nn.Module):
     def __init__(self, zdim, num_steps, beta_1, beta_T):
         super().__init__()
         self.encoder = PointNetEncoder(zdim)
-        self.decoder = PointwiseNet(zdim)
+        self.decoder = GLUDecoder(zdim)
         self.schedule = VarianceSchedule(num_steps, beta_1, beta_T)
 
     def encode(self, pos: torch.Tensor, batch: torch.Tensor):

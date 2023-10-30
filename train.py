@@ -8,9 +8,9 @@ from torch.utils.tensorboard.writer import SummaryWriter
 from models.diffusion import Model
 from common.visualization import visualize_batch_results
 from common.logs import get_logger, get_new_log_dir
-from loss.chamfer import CDLoss, MSELoss
+from loss.chamfer_loss import CDLoss
+from torch.nn import MSELoss
 from argparse import ArgumentParser
-
 
 import os
 import time
@@ -77,19 +77,19 @@ logger = get_logger('train', log_dir=logdir)
 
 @torch.no_grad()
 def validate_loss():
+    model.eval()
     all_loss = 0
     for i, data in enumerate(test_loader):
-        model.eval()
         data = data.to(device)
 
         z = model.encode(data.pos, data.batch)
         recons = model.decode(data.pos.size(), z, data.batch)
-        loss = cd(recons, data.pos, data.batch, reduction='sum')
+        loss = cd(recons, data.pos, data.batch)
         logger.info(f'Validation Iteration: {i}, Loss: {loss.item()}')
 
         all_loss += loss.item()
 
-    error = all_loss / len(test_loader.dataset) # type: ignore
+    error = all_loss / len(test_loader) # type: ignore
     return error
 
 
@@ -101,7 +101,7 @@ def create_sample_figure(dataset, num_samples):
 
     z = model.encode(data.pos, data.batch)
     recons = model.decode(data.pos.size(), z, data.batch)
-    fig = visualize_batch_results(data.pos, recons, data.batch, max_in_row=num_samples)
+    fig = visualize_batch_results(recons, data.batch, max_in_row=num_samples)
 
     return fig
 
@@ -113,7 +113,7 @@ def train():
         data = data.to(device)
 
         e_theta, e_rand = model(data.pos, data.batch)  # Forward pass.
-        loss = criterion(e_theta, e_rand, data.batch)  # Loss computation.
+        loss = criterion(e_theta, e_rand)  # Loss computation.
 
         loss.backward()  # Backward pass.
         optimizer.step()  # Update model parameters.

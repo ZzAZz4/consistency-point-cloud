@@ -8,6 +8,7 @@ def visualize_points(pos, c=None):
     ax = fig.add_subplot(projection='3d')
     ax.scatter(pos[:, 0], pos[:, 1], pos[:, 2],
                c='blue' if c is None else c, s=3)
+    ax.set_aspect('equal', adjustable='datalim')
     plt.show()
 
 
@@ -17,9 +18,10 @@ def visualize_batched_points(pos, batch, index, c=None):
     visualize_points(tg.cpu())
 
 
-def visualize_batch_results(pos, newpos, batch, max_in_row=5):
+def visualize_batch_results(pos, batch, max_in_row=5):
+    pos = pos.detach().cpu()
+    batch = batch.detach().cpu()
     pos, _ = to_dense_batch(pos, batch)
-    newpos, _ = to_dense_batch(newpos, batch)
     n = pos.size(0)
 
     num_rows = math.ceil(n / max_in_row)
@@ -30,13 +32,6 @@ def visualize_batch_results(pos, newpos, batch, max_in_row=5):
         ax = fig.add_subplot(2 * num_rows, num_cols, i+1, projection='3d')
         pc = pos[i].cpu()
         ax.scatter(pc[:, 0], pc[:, 1], pc[:, 2], c='red', s=3)
-        ax.set_aspect('equal', adjustable='datalim')
-
-    for i in range(n):
-        ax = fig.add_subplot(2 * num_rows, num_cols, i +
-                             num_cols * num_rows + 1, projection='3d')
-        pc = newpos[i].cpu()
-        ax.scatter(pc[:, 0], pc[:, 1], pc[:, 2], c='blue', s=3)
         ax.set_aspect('equal', adjustable='datalim')
 
     return fig
