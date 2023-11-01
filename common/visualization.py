@@ -1,5 +1,7 @@
 import math
+import matplotlib
 import matplotlib.pyplot as plt
+matplotlib.use('Agg')
 from torch_geometric.utils import to_dense_batch
 
 
