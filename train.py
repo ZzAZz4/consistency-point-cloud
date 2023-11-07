@@ -6,7 +6,7 @@ from torch_geometric.loader import DataLoader
 from torch.utils.tensorboard.writer import SummaryWriter
 
 from models.diffusion import Model
-from common.visualization import visualize_batch_results
+from common.visualization import visualize_batch_points
 from common.logs import get_logger, get_new_log_dir
 from loss.chamfer_loss import CDLoss
 from torch.nn import MSELoss
@@ -101,7 +101,7 @@ def create_sample_figure(dataset, num_samples):
 
     z = model.encode(data.pos, data.batch)
     recons = model.decode(data.pos.size(), z, data.batch)
-    fig = visualize_batch_results(recons, data.batch, max_in_row=num_samples)
+    fig = visualize_batch_points(recons, data.batch, max_in_row=num_samples)
 
     return fig
 

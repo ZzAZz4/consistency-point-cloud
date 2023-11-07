@@ -11,18 +11,9 @@ from torch_cluster import knn_graph, fps
 class PointNetEncoder(torch.nn.Module):
     def __init__(self, zdim):
         super().__init__()
-        self.conv1 = PointNetConv(
-            local_nn=MLP([3 + 3, 32], act=SiLU(), plain_last=True), 
-            global_nn=SiLU(), 
-            aggr=MaxAggregation()
-        )
-        self.conv2 = PointNetConv(
-            local_nn=MLP([32 + 3, 32], act=SiLU(), plain_last=True), 
-            global_nn=SiLU(), 
-            aggr=MaxAggregation()
-        )
+        self.conv1 = PointNetConv(MLP([3 + 3, 64], act=SiLU(), plain_last=False),)
+        self.conv2 = PointNetConv(MLP([64 + 3, 128, zdim], act=SiLU(), plain_last=False),)
         self.aggr = MaxAggregation()
-        self.net = Linear(32, zdim)
 
     def forward(self, pos: torch.Tensor, batch: torch.Tensor):
         h: torch.Tensor
@@ -35,7 +26,8 @@ class PointNetEncoder(torch.nn.Module):
         h = self.conv2(x=(h, h), pos=pos, edge_index=edge_index)
 
         h = self.aggr(h, batch) 
-        return self.net(h)
+        return h
     
     def __call__(self, pos: torch.Tensor, batch: torch.Tensor):
         return super().__call__(pos, batch)
+
