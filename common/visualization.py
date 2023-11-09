@@ -1,5 +1,6 @@
 import math
 import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from torch_geometric.utils import to_dense_batch
 from mpl_toolkits.mplot3d.axes3d import Axes3D
