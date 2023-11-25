@@ -1,1 +1,0 @@
-from .joint_norm_scale import JointNormalizeScale

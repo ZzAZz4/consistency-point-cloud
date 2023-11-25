@@ -3,6 +3,7 @@ data
 logs
 runs
 checkpoints
+videos
 __pycache__
 
 # Byte-compiled / optimized / DLL files
