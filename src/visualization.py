@@ -21,7 +21,7 @@ def visualize_batch_points(pos, batch, max_in_row=5, alpha=0.2):
     num_rows = math.ceil(n / max_in_row)
     num_cols = min(n, max_in_row)
 
-    fig = plt.figure(figsize=(num_cols * 2, num_rows * 2))
+    fig = plt.figure(figsize=(num_cols * 4, num_rows * 4))
     for i in range(n):
         ax = fig.add_subplot(2 * num_rows, num_cols, i+1, projection='3d')
         ax.scatter(pos[i][:, 0], pos[i][:, 1], pos[i][:, 2], c='red', s=1, alpha=alpha) # type: ignore

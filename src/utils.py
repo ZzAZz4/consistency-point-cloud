@@ -11,10 +11,7 @@ from matplotlib.animation import FuncAnimation, FFMpegWriter
 from torch_geometric.utils import to_dense_batch
 import torch
 
-from src.data import BatchedData
-
-from IPython.display import display
-from IPython.core.display import HTML
+import logging
 
 
 class LogLoss:
@@ -27,6 +24,7 @@ class LogLoss:
                 self.writer.add_scalar(k, v, iteration)
         else:
             self.writer.add_scalar("Loss", loss, iteration)
+        
 
 
 class PrintAmortizedLoss:
@@ -51,10 +49,6 @@ class PrintAmortizedLoss:
                 print(f"{k}: {v / self.n} ", end="")
             print()
             self.cum = dict()
-        # self.cum += loss
-        # if iteration % self.n == 0:
-        #     print(f"Iteration {iteration}: Loss: {self.cum / 10}")
-        #     self.cum = 0
 
 
 class SaveCheckpoint:
@@ -65,7 +59,7 @@ class SaveCheckpoint:
         self.every = every
 
     def __call__(self, epoch):
-        if not epoch or epoch % self.every != 0:
+        if epoch % self.every != 0:
             return
         
         if not os.path.exists(self.ckpt_dir):
@@ -76,29 +70,38 @@ class SaveCheckpoint:
             "model_state_dict": self.model.state_dict(),
             "optimizer_state_dict": self.optimizer.state_dict(),
         }, os.path.join(self.ckpt_dir, f"epoch_{epoch}.pt"))
+        logging.info(f"Saved checkpoint at epoch {epoch}")
 
 
 
 def make_visualization_frame(n, max_in_row=5):
     num_rows = math.ceil(n / max_in_row)
     num_cols = min(n, max_in_row)
-    fig = plt.figure(figsize=(num_cols * 2, num_rows * 2))
+    fig = plt.figure(figsize=(num_cols * 2, num_rows * 3))
+
     axs, graphs = [], []
-    
     for i in range(n):
-        ax = fig.add_subplot(2 * num_rows, num_cols, i+1, projection='3d')
+        ax = fig.add_subplot(3 * num_rows, num_cols, i+1, projection='3d')
         graph, = ax.plot([-1, 1], [-1, 1], [-1, 1], marker='o', linestyle='None', c='red', markersize=1, alpha=0.2)
         ax.set_aspect('equal', adjustable='datalim')
         graphs.append(graph); axs.append(ax)
 
+
+    mid_axs, mid_graphs = [], []
+    for i in range(n):
+        ax = fig.add_subplot(3 * num_rows, num_cols, n + i + 1, projection='3d')
+        graph, = ax.plot([-1, 1], [-1, 1], [-1, 1], marker='o', linestyle='None', c='blue', markersize=1, alpha=0.2)
+        ax.set_aspect('equal', adjustable='datalim')
+        mid_graphs.append(graph); mid_axs.append(ax)
+
     low_axs, low_graphs = [], []
     for i in range(n):
-        ax = fig.add_subplot(2 * num_rows, num_cols, n + i + 1, projection='3d')
+        ax = fig.add_subplot(3 * num_rows, num_cols, 2 * n + i + 1, projection='3d')
         graph, = ax.plot([-1, 1], [-1, 1], [-1, 1], marker='o', linestyle='None', c='blue', markersize=1, alpha=0.2)
         ax.set_aspect('equal', adjustable='datalim')
         low_graphs.append(graph); low_axs.append(ax)
 
-    return fig, axs, graphs, low_axs, low_graphs
+    return fig, (axs, graphs), (mid_axs, mid_graphs), (low_axs, low_graphs)
 
 
 class Visualize:
@@ -120,22 +123,29 @@ class Visualize:
         noise = torch.randn_like(data.pos, device=self.device)
         batch_size = int(data.pos_batch.max()) + 1
 
-        frame_source, axs_source, graphs_source, axs_result, graphs_result = make_visualization_frame(batch_size, max_in_row=batch_size)
+        frame, \
+            (axs_source, graphs_source), \
+            (axs_result, graphs_result), \
+            (axs_target, graphs_target)      = make_visualization_frame(batch_size, max_in_row=batch_size)
 
         def animation(t):
+            logging.debug(f"t = {t}")
             t = t + 1e-3
             dirty = data.pos + t * noise
 
-            t = torch.ones_like(data.pos_batch) * t
+            t = torch.ones(batch_size, device=self.device) * t
             out = self.model(x=dirty, t=t, x_batch=data.pos_batch, par=data.par, par_batch=data.par_batch)
+            out = out.output
 
-            dirty = dirty / dirty.std(dim=0, keepdim=True) * out.std(dim=0, keepdim=True)
-
-            source_out = dirty.detach().cpu()
+            source_out = data.par.detach().cpu()
             result_out = out.detach().cpu()
-            batch = data.batch.detach().cpu()
-            source_pos, _ = to_dense_batch(source_out, batch)
-            result_pos, _ = to_dense_batch(result_out, batch)
+            target_out = data.pos.detach().cpu()
+
+            pos_batch = data.batch.detach().cpu()
+            par_batch = data.par_batch.detach().cpu()
+            source_pos, _ = to_dense_batch(source_out, par_batch)
+            result_pos, _ = to_dense_batch(result_out, pos_batch)
+            target_pos, _ = to_dense_batch(target_out, pos_batch)
 
             for i in range(batch_size):
                 x, y, z = source_pos[i][:, 0], source_pos[i][:, 1], source_pos[i][:, 2]
@@ -150,16 +160,23 @@ class Visualize:
                 graphs_result[i].set_3d_properties(z)
                 axs_result[i].set_aspect('equal', adjustable='datalim')
 
-            return graphs_source + graphs_result
+                x, y, z = target_pos[i][:, 0], target_pos[i][:, 1], target_pos[i][:, 2]
+                graphs_target[i].set_data(x, y)
+                graphs_target[i].set_3d_properties(z)
+                axs_target[i].set_aspect('equal', adjustable='datalim')
+
+            return graphs_source + graphs_result + graphs_target
             
 
-        frames = range(0, 70)
-        anim = FuncAnimation(frame_source, animation, frames=frames, interval=200, blit=True)
-        # writer = FFMpegWriter(fps=10)
+        frames = range(0, 70, 2)
+        anim = FuncAnimation(frame, animation, frames=frames, interval=200, blit=True)
 
-        # if not os.path.exists(self.vid_dir):
-        #     os.makedirs(self.vid_dir)
+        if not os.path.exists(self.vid_dir):
+            os.makedirs(self.vid_dir)
 
-        # anim.save(os.path.join(self.vid_dir, f"epoch_{epoch}.mp4"), writer=writer)
+        logging.info(f"Saving visualization at epoch {epoch}")
+        writer = FFMpegWriter(fps=10)
+        anim.save(os.path.join(self.vid_dir, f"epoch_{epoch}.mp4"), writer=writer)
 
-        display(HTML(anim.to_jshtml()))
+        
+        

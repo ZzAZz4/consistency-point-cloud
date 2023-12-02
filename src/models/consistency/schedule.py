@@ -12,22 +12,22 @@ class BaseStepSchedule(ABC):
         ...
 
 
-class NumTimestepsSchedule(BaseStepSchedule):
+class TimestepSchedule(BaseStepSchedule):
     def __init__(
         self,
-        min_time_partitions: int,
-        max_time_partitions: int,
-        training_iterations: int
+        training_iterations: int, 
+        initial_timesteps: int, 
+        final_timesteps: int
     ) -> None:
         super().__init__()
-        self.target_disc_steps = (min_time_partitions, max_time_partitions)
         self.training_iterations = training_iterations
+        self.initial_timesteps = initial_timesteps
+        self.final_timesteps = final_timesteps
 
     def __call__(self, iteration: int) -> int:
-        s, K = self.target_disc_steps, self.training_iterations
-        num_timesteps = (s[1] + 1)**2 - s[0]**2
-        num_timesteps = iteration * num_timesteps / K
-        num_timesteps = num_timesteps + s[0]**2
+        num_timesteps = (self.final_timesteps + 1)**2 - self.initial_timesteps**2
+        num_timesteps = iteration * num_timesteps / self.training_iterations
+        num_timesteps = num_timesteps + self.initial_timesteps**2
         num_timesteps = math.sqrt(num_timesteps)
         num_timesteps = math.ceil(-1. + num_timesteps)
         return 1 + num_timesteps

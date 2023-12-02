@@ -32,7 +32,6 @@ class AttDGCNNEncoder(torch.nn.Module):
         x_4 = self.conv4(x_3, batch)
         x = torch.cat([x_1, x_2, x_3, x_4], dim=-1)
         x = self.aggr(self.shared(x), batch)
-        print(x.shape)
         x = self.out(x)
         return x
     
